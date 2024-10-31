@@ -1,6 +1,6 @@
 using System.Data;
-using C0deGeek.Pagination;
 using C0deGeek.Pagination.Extensions;
+using C0deGeek.Pagination.Light.Extensions;
 using DemoWebApp.Models;
 using DemoWebApp.Services;
 
@@ -38,6 +38,15 @@ public class Program
             options.RetryBaseDelayMs = 100;
         })
         .AddSearchProvider<User, UserSearchProvider>();
+        
+        builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddLightPagination(options =>
+        {
+            options.EnableCompression = true;
+            options.EnableResponseCaching = true;
+            options.EnableDynamicSorting = true;
+        });
+
         
         builder.Services.AddControllers();
         

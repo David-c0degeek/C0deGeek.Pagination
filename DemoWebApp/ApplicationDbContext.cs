@@ -1,5 +1,4 @@
-﻿using C0deGeek.Pagination;
-using C0deGeek.Pagination.Data;
+﻿using C0deGeek.Pagination.Data;
 using DemoWebApp.Models;
 using Microsoft.EntityFrameworkCore;
 

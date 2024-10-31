@@ -1,5 +1,4 @@
-﻿using C0deGeek.Pagination;
-using C0deGeek.Pagination.Core;
+﻿using C0deGeek.Pagination.Core;
 using C0deGeek.Pagination.Extensions;
 using C0deGeek.Pagination.Http;
 using C0deGeek.Pagination.Services;

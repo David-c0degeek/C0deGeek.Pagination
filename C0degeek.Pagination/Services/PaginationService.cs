@@ -205,7 +205,7 @@ public class PaginationService<TEntity, TDbContext>
         var resultQuery = Expression.Call(
             typeof(Queryable),
             methodName,
-            new Type[] { typeof(TEntity), property.Type },
+            [typeof(TEntity), property.Type],
             query.Expression,
             Expression.Quote(lambda)
         );
