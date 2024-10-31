@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -7,20 +6,68 @@
         <AssemblyName>C0deGeek.Pagination</AssemblyName>
         <RootNamespace>C0deGeek.Pagination</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+        <!-- Package Metadata -->
+        <PackageId>C0deGeek.Pagination</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>David@C0degeek.dev</Authors>
+        <Company>C0deGeek.dev</Company>
         <Copyright>David@C0degeek.dev</Copyright>
+
+        <!-- Package Description -->
+        <Title>C0deGeek.Pagination</Title>
+        <Description>A comprehensive pagination solution for ASP.NET Core with EF Core, featuring caching, rate limiting, and search capabilities.</Description>
+        <PackageTags>pagination;aspnetcore;entityframeworkcore;cache;ratelimit;search;efcore</PackageTags>
+
+        <!-- Repository and Documentation -->
         <PackageProjectUrl>https://github.com/David-c0degeek/C0deGeek.Pagination</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/David-c0degeek/C0deGeek.Pagination</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+
+        <!-- Source Link -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+        <!-- Documentation -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10"/>
+        <!-- Package Dependencies -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
-        <PackageReference Include="Polly" Version="8.4.2"/>
-        <PackageReference Include="System.Threading.RateLimiting" Version="8.0.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1"/>
+        <PackageReference Include="Polly" Version="8.4.2" />
+        <PackageReference Include="System.Threading.RateLimiting" Version="8.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+
+        <!-- Source Link -->
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+
+        <!-- Framework References -->
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Include README and LICENSE -->
+        <None Include="../README.md" Pack="true" PackagePath="\" />
+        <None Include="../LICENSE.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DebugType>portable</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DebugType>portable</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
 </Project>
