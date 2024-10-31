@@ -1,18 +1,42 @@
 # C0deGeek.Pagination
 
-A comprehensive, production-ready pagination solution for ASP.NET Core applications with Entity Framework Core. Features include caching, rate limiting, concurrency control, and search capabilities.
+A comprehensive pagination solution for ASP.NET Core applications offering two implementations:
+1. Full version with Entity Framework Core integration
+2. Light version for any IQueryable/IEnumerable
+
+## Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+- [Full Version (EF Core)](#full-version-ef-core)
+- [Light Version](#light-version)
+- [Configuration Options](#configuration-options)
+- [Advanced Features](#advanced-features)
+- [Best Practices](#best-practices)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
 ## Features
 
+### Full Version (EF Core)
 - ✨ Entity Framework Core integration
-- 🚀 Optimized performance with caching
 - 🔒 Concurrency control with RowVersion
-- 🔍 Flexible search capabilities
-- 🌡️ Rate limiting (both service and API level)
 - 💪 Circuit breaker and retry policies
-- 🔄 HATEOAS support
+- 🌡️ Rate limiting (service and API level)
+- 📦 Advanced caching strategies
+
+### Light Version
+- 🚀 Works with any IQueryable/IEnumerable
+- 📦 No database dependencies
+- ⚡ Lightweight and fast
+- 🗃️ Simple memory caching
+- 🔄 Dynamic sorting
+
+### Common Features (Both Versions)
+- 🔍 Flexible search capabilities
 - 🗜️ Response compression
-- 📦 ETag support for caching
+- 📦 ETag support
+- 🔄 HATEOAS support
 - 🛡️ Thread-safe operations
 
 ## Installation
@@ -21,7 +45,9 @@ A comprehensive, production-ready pagination solution for ASP.NET Core applicati
 dotnet add package C0deGeek.Pagination
 ```
 
-## Quick Start
+## Full Version (EF Core)
+
+### Quick Start
 
 1. Define your entity:
 ```csharp
@@ -81,35 +107,96 @@ public class UsersController : PaginationControllerBase<User>
         [FromHeader(Name = "If-None-Match")] string? ifNoneMatch = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var result = await _paginationService.GetPagedDataAsync(
-                parameters,
-                cancellationToken);
+        var result = await _paginationService.GetPagedDataAsync(
+            parameters,
+            cancellationToken);
 
-            if (result is null)
-            {
-                return StatusCode(304); // Not Modified
-            }
-
-            SetPaginationHeaders(result);
-            return Ok(new PaginationResponse<User>(
-                result.Items,
-                result,
-                GenerateLinks(result, nameof(GetUsers), new { parameters.PageSize })
-            ));
-        }
-        catch (RateLimitExceededException)
+        if (result is null)
         {
-            return StatusCode(429, "Too many requests");
+            return StatusCode(304);
         }
+
+        return Ok(new PaginationResponse<User>(
+            result.Items,
+            result,
+            GenerateLinks(result, nameof(GetUsers), new { parameters.PageSize })
+        ));
+    }
+}
+```
+
+## Light Version
+
+### Quick Start
+
+1. Define your model:
+```csharp
+public class Item : ILightSearchable
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public bool MatchesSearchTerm(string searchTerm)
+    {
+        return Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+    }
+}
+```
+
+2. Register services:
+```csharp
+services.AddLightPagination(options => 
+{
+    options.EnableCompression = true;
+    options.EnableResponseCaching = true;
+    options.EnableCaching = true;
+    options.EnableDynamicSorting = true;
+});
+```
+
+3. Create your controller:
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ItemsController : LightPaginationControllerBase
+{
+    private readonly LightPaginationService _paginationService;
+    private readonly LightPaginationOptions _options;
+
+    public ItemsController(
+        LightPaginationService paginationService,
+        IOptions<LightPaginationOptions> options)
+    {
+        _paginationService = paginationService;
+        _options = options.Value;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetItems(
+        [FromQuery] LightPaginationParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        var items = GetItems(); // Your data source
+        
+        var result = await _paginationService.CreatePaginatedResultAsync(
+            items, 
+            parameters,
+            cancellationToken);
+            
+        return await CreatePaginatedResponseAsync(
+            result, 
+            _options,
+            nameof(GetItems),
+            new { parameters.PageSize });
     }
 }
 ```
 
 ## Configuration Options
 
-### Pagination Options
+### Full Version Options
 ```csharp
 services.AddPagination<YourDbContext>(options => 
 {
@@ -137,64 +224,35 @@ services.AddPagination<YourDbContext>(options =>
 });
 ```
 
-### Rate Limiting Options
-
-Choose between service-level, API-level, or both:
-
+### Light Version Options
 ```csharp
-// Service-level only
-services.AddPaginationWithServiceRateLimit<YourDbContext>(options => 
+services.AddLightPagination(options => 
 {
-    options.EnableRateLimiting = true;
-    options.RateLimitPermitLimit = 100;
+    // Caching
+    options.EnableCaching = true;
+    options.CacheSlidingExpiration = TimeSpan.FromMinutes(5);
+    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+
+    // Compression
+    options.EnableCompression = true;
+    options.CompressionLevel = CompressionLevel.Optimal;
+
+    // Response Caching
+    options.EnableResponseCaching = true;
+    options.ResponseCacheDuration = 60;
+
+    // Pagination
+    options.MaxPageSize = 100;
+    options.DefaultPageSize = 10;
+
+    // Sorting
+    options.EnableDynamicSorting = true;
 });
-
-// API-level only
-services.AddPaginationWithApiRateLimit<YourDbContext>(options =>
-{
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromSeconds(1);
-    });
-});
-```
-
-## Search Capabilities
-
-### Option 1: Implement ISearchableEntity
-```csharp
-public class User : IEntity, ISearchableEntity
-{
-    // ... other properties
-
-    public bool MatchesSearchTerm(string searchTerm)
-    {
-        return (Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (Email?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false);
-    }
-}
-```
-
-### Option 2: Create a Search Provider
-```csharp
-public class UserSearchProvider : ISearchExpressionProvider<User>
-{
-    public Expression<Func<User, bool>> GetSearchExpression(string searchTerm)
-    {
-        return user => 
-            EF.Functions.Like(user.Name, $"%{searchTerm}%") ||
-            EF.Functions.Like(user.Email, $"%{searchTerm}%");
-    }
-}
-
-// Register the provider
-services.AddSearchProvider<User, UserSearchProvider>();
 ```
 
 ## Response Format
 
-The API returns responses in this format:
+Both versions return responses in this format:
 
 ```json
 {
@@ -215,12 +273,12 @@ The API returns responses in this format:
         "hasPreviousPage": false,
         "links": [
             {
-                "href": "/api/users?pageNumber=1&pageSize=10",
+                "href": "/api/items?pageNumber=1&pageSize=10",
                 "rel": "self",
                 "method": "GET"
             },
             {
-                "href": "/api/users?pageNumber=2&pageSize=10",
+                "href": "/api/items?pageNumber=2&pageSize=10",
                 "rel": "next",
                 "method": "GET"
             }
@@ -229,61 +287,30 @@ The API returns responses in this format:
 }
 ```
 
-## Response Headers
+## When to Use Which Version?
 
-- `ETag`: For cache validation
-- `Last-Modified`: Last modification timestamp
-- `X-Total-Count`: Total number of items
-- `X-Total-Pages`: Total number of pages
+### Use Full (EF Core) Version When:
+- You're using Entity Framework Core
+- You need concurrency control
+- You need database-level transactions
+- You require circuit breaker patterns
+- You want retry policies for database operations
 
-## Error Handling
-
-The package provides these status codes:
-
-- `200 OK`: Successful request
-- `304 Not Modified`: Content hasn't changed
-- `429 Too Many Requests`: Rate limit exceeded
-- `503 Service Unavailable`: Circuit breaker open
-
-## Advanced Features
-
-### Custom Cache Key Generation
-```csharp
-public class CustomCacheKeyProvider : ICacheKeyProvider<User>
-{
-    public string GetCacheKey(PaginationParameters parameters)
-    {
-        return $"custom_key_{parameters.GetHashCode()}";
-    }
-}
-
-services.AddScoped<ICacheKeyProvider<User>, CustomCacheKeyProvider>();
-```
-
-### Custom Sort Expressions
-```csharp
-public class UserSortProvider : ISortExpressionProvider<User>
-{
-    public IQueryable<User> ApplySort(
-        IQueryable<User> query, 
-        string sortBy, 
-        bool descending)
-    {
-        // Custom sorting logic
-    }
-}
-
-services.AddScoped<ISortExpressionProvider<User>, UserSortProvider>();
-```
+### Use Light Version When:
+- You're working with in-memory collections
+- You're using a different ORM
+- You need simple pagination without database dependencies
+- You want faster performance for small datasets
+- You're paginating API responses from other services
 
 ## Best Practices
 
 1. Always use cancellation tokens for async operations
 2. Implement proper error handling
 3. Set appropriate cache durations
-4. Configure rate limits based on your API's capacity
-5. Monitor circuit breaker events
-6. Use appropriate isolation levels for your use case
+4. Configure compression based on response size
+5. Use appropriate isolation levels (Full version)
+6. Monitor memory usage with caching
 
 ## Contributing
 
@@ -299,6 +326,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.MD
 
 ## Acknowledgments
 
-- Built with ASP.NET Core and Entity Framework Core
-- Uses Polly for resilience patterns
+- Built with ASP.NET Core
+- Uses Polly for resilience patterns (Full version)
 - Inspired by REST best practices and HATEOAS principles
