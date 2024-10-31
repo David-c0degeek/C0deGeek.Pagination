@@ -12,7 +12,8 @@
         <Version>1.1.0</Version>
         <Authors>David@C0degeek.dev</Authors>
         <Company>C0deGeek.dev</Company>
-        <Copyright>David@C0degeek.dev</Copyright>
+        <Copyright>Copyright © C0deGeek $([System.DateTime]::Now.Year)</Copyright>
+        <PackageIcon>C0deGeek.Pagination.Icon.jpg</PackageIcon>
 
         <!-- Package Description -->
         <Title>C0deGeek.Pagination</Title>
@@ -56,6 +57,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="C0deGeek.Pagination.Icon.jpg" Pack="true" PackagePath="\" />
         <!-- Include README and LICENSE -->
         <None Include="../README.md" Pack="true" PackagePath="\" />
         <None Include="../LICENSE.md" Pack="true" PackagePath="\" />
