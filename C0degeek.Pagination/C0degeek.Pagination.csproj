@@ -9,7 +9,7 @@
         
         <!-- Package Metadata -->
         <PackageId>C0deGeek.Pagination</PackageId>
-        <Version>1.1.0</Version>
+        <Version>1.1.1</Version>
         <Authors>David@C0degeek.dev</Authors>
         <Company>C0deGeek.dev</Company>
         <Copyright>Copyright © C0deGeek $([System.DateTime]::Now.Year)</Copyright>
